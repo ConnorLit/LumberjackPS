@@ -16,11 +16,8 @@ Creates a new log file and initialises it as a target for future logging cmdlets
 
   **Parameters**
       
-      -LogName [string] 
+      -LogName [string] -default "Log"
       Determines the prefix of the log file. (example: <Your-Logfile-Name.log>)
-  
-      -UseScriptFileAsName [switch] 
-      Matches the log file name to the file name of the script. (This takes priority over set log files with the -LogName parameter)
 
       -OmitLogStartText [switch] 
       Removes the default banner and script info printed by the Write-OtterLogStart cmdlet.
