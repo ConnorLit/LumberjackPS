@@ -5,8 +5,7 @@ function Start-OtterLog {
 
     [CmdletBinding()]
     param(
-        [string]$LogName = "OtterLog",
-        [switch]$UseScriptFileAsName,
+        [string]$LogName = "Log",
         [switch]$OmitDatePrefix,
         [switch]$OmitLogStartText,
         [string]$LogDirectory = "C:\IT\Logs",
@@ -63,6 +62,29 @@ function Start-OtterLog {
 
 }
 
+function Stop-OtterLog {
+
+    [CmdletBinding()]
+    param(
+        [switch]$OmitLogSummary
+    )
+
+    # Check for global var
+    if ($null -eq $global:OtterLog) {
+        Throw "Unable to stop log. A log file has not been initialised."
+    }
+
+    # Check for log file existance
+    if (-not(Test-Path -Path $global:OtterLog)) {
+        Throw "Unable to stop log. The log file [$global:OtterLog] does not exist or cannot be read."
+    }
+
+    # Add Summary
+    if (-not($OmitLogSummary)) {
+        Write-OtterLogEnd
+    }
+
+}
 
 # Write-OtterLog
 function Write-OtterLog {
@@ -110,8 +132,6 @@ function Write-OtterLogStart {
 
     [CmdletBinding()]
     param(
-        [string]$LogString,
-        [switch]$AddEmptyLine,
         [switch]$OmitBanner
     )
 
@@ -133,11 +153,46 @@ function Write-OtterLogStart {
     $LogStartString = Get-Date -Format "dd-MM-yyyy hh:mm:ss.fff"
     Write-OtterLog "   Script stats" -OmitDatePrefix
     Write-OtterLog "     Log started:     $LogStartString" -OmitDatePrefix
-    $LogFileNameString = $MyInvocation.MyCommand.Name
-    $LogFileFullnameString = $MyInvocation.MyCommand.Fullname
-    Write-OtterLog "     Log file       : $LogFileNameString" -OmitDatePrefix
-    Write-OtterLog "     Log file (full): $LogFileFullnameString" -OmitDatePrefix
     Write-OtterLog "     Ran as         : $env:USERNAME" -OmitDatePrefix -AddEmptyLine
     Write-OtterLog "=======================================================================================" -OmitDatePrefix -AddEmptyLine
+
+}
+
+function Write-OtterLogEnd {
+
+    [CmdletBinding()]
+    param(
+    )
+
+    # Add Banner
+    if (-not($OmitBanner)) {
+        Write-OtterLog "" -OmitDatePrefix
+        Write-OtterLog "" -OmitDatePrefix
+        Write-OtterLog "=======================================================================================" -AddEmptyLine -OmitDatePrefix
+    }
+    
+    # Script duration
+    $global:OtterLogEnd = Get-Date
+    $ScriptDuration = $global:OtterLogEnd.Subtract($global:OtterLogStart)
+    $DurationDays = $ScriptDuration.Days
+    $DurationHours = $ScriptDuration.Hours
+    $DurationMins = $ScriptDuration.Minutes
+    $DurationSecs = $ScriptDuration.Seconds
+    $DurationMSecs = $ScriptDuration.Milliseconds
+
+    $DurationString = ""
+    if ($DurationDays -gt 0) { $DurationString += "$DurationDays days, " }
+    if ($DurationHours -gt 0) { $DurationString += "$DurationHours hours, " }
+    if ($DurationMins -gt 0) { $DurationString += "$DurationMins minutes, " }
+    $DurationString += "$DurationSecs seconds, "
+    $DurationString += "and $DurationMSecs millseconds. "
+
+
+    # Add script stats
+    $LogStartString = Get-Date -Format "dd-MM-yyyy hh:mm:ss.fff"
+    Write-OtterLog "   Script stats" -OmitDatePrefix
+    Write-OtterLog "     Log ended:       $LogStartString" -OmitDatePrefix
+    Write-OtterLog "     Script duration: $DurationString" -OmitDatePrefix -AddEmptyLine
+    Write-OtterLog "Log file closed."
 
 }
